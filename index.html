@@ -1,1388 +1,1082 @@
-
-<!DOCTYPE html>
-<html lang="es">
+<!doctype html>
+<html lang=es>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Análisis de Dispositivos y Eficacia Judicial</title>
-    
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.css">
-    
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
-    
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        
-        body {
-            background: #121212;
-            min-height: 100vh;
-            padding: 20px;
-            color: #e0e0e0;
-        }
-        
-        .container {
-            max-width: 1600px;
-            margin: 0 auto;
-            background: #1e1e1e;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
-            overflow: hidden;
-        }
-        
-        header {
-            background: #bad405;
-            color: rgb(3, 3, 3);
-            padding: 20px;
-            text-align: center;
-            border-bottom: 1px solid #bad405;
-        }
-        
-        h1 {
-            font-size: 2.2rem;
-            margin-bottom: 10px;
-        }
-        
-        .description {
-            font-size: 1.1rem;
-            max-width: 800px;
-            margin: 0 auto;
-            color: #070707;
-        }
-        
-        .map-main-section {
-            width: 100%;
-            background: #1e1e1e;
-        }
-        
-        .map-container {
-            width: 100%;
-            height: 800px;
-            position: relative;
-            background: #2d2d2d;
-        }
-        
-        #map {
-            width: 100%;
-            height: 100%;
-            z-index: 1;
-        }
-        
-        .map-controls-bar {
-            background: #252525;
-            padding: 12px 20px;
-            border-bottom: 1px solid #333;
-            border-top: 1px solid #333;
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            justify-content: space-between;
-            gap: 15px;
-        }
-        
-        .control-group-horizontal {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            flex-wrap: wrap;
-        }
-        
-        .control-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            background: #2d2d2d;
-            padding: 5px 12px;
-            border-radius: 20px;
-        }
-        
-        .control-item label {
-            font-size: 0.8rem;
-            color: #4a8cff;
-        }
-        
-        .control-item input {
-            width: 100px;
-            cursor: pointer;
-        }
-        
-        .control-item span {
-            font-size: 0.7rem;
-            color: #b0b0b0;
-            min-width: 35px;
-        }
-        
-        .map-selector-buttons {
-            display: flex;
-            gap: 8px;
-        }
-        
-        .btn-map-sm {
-            background: #333;
-            border: none;
-            padding: 5px 12px;
-            border-radius: 20px;
-            cursor: pointer;
-            color: #e0e0e0;
-            font-size: 0.75rem;
-            transition: all 0.2s;
-        }
-        
-        .btn-map-sm.active {
-            background: #bad405;
-            color: black;
-            font-weight: bold;
-        }
-        
-        .judicial-analysis-section {
-            background: #1e1e1e;
-            padding: 20px;
-            border-top: 2px solid #bad405;
-        }
-        
-        .analysis-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-        
-        .analysis-header h2 {
-            color: #bad405;
-            font-size: 1.5rem;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .analysis-tabs {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-        
-        .tab-btn {
-            background: #333;
-            border: none;
-            padding: 8px 18px;
-            border-radius: 30px;
-            cursor: pointer;
-            color: #e0e0e0;
-            transition: all 0.3s;
-            font-size: 0.85rem;
-            font-weight: 500;
-        }
-        
-        .tab-btn.active {
-            background: #4a8cff;
-            color: white;
-            box-shadow: 0 2px 8px rgba(74, 140, 255, 0.3);
-        }
-        
-        .analysis-content-wrapper {
-            background: #252525;
-            border-radius: 12px;
-            padding: 5px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-        }
-        
-        .table-container {
-            max-height: 550px;
-            overflow-y: auto;
-            border-radius: 10px;
-            background: #2d2d2d;
-        }
-        
-        .analysis-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.8rem;
-            background: #2d2d2d;
-        }
-        
-        .analysis-table th,
-        .analysis-table td {
-            padding: 12px 8px;
-            text-align: left;
-            border-bottom: 1px solid #444;
-            font-weight: bold;
-            color: #e0e0e0;
-            background: #2d2d2d;
-        }
-        
-        .analysis-table th {
-            background: #4a8cff;
-            color: white;
-            font-weight: bold;
-            position: sticky;
-            top: 0;
-            z-index: 10;
-        }
-        
-        .analysis-table th:first-child,
-        .analysis-table td:first-child {
-            width: 120px;
-            min-width: 100px;
-        }
-        
-        .repitencia-table th,
-        .repitencia-table td {
-            padding: 10px 6px;
-        }
-        
-        .repitencia-table th:first-child { width: 100px; }
-        .repitencia-table th:nth-child(2) { width: 100px; }
-        .repitencia-table th:nth-child(3) { width: 80px; }
-        .repitencia-table th:nth-child(4) { width: 100px; }
-        
-        .analysis-table tr:hover td {
-            background: #3a3a3a;
-        }
-        
-        .repitencia-badge {
-            display: inline-block;
-            padding: 2px 8px;
-            border-radius: 20px;
-            font-size: 0.7rem;
-            font-weight: bold;
-        }
-        .repitencia-alta { background: #ff4757; color: white; }
-        .repitencia-media { background: #ffa502; color: white; }
-        .repitencia-baja { background: #00b894; color: white; }
-        
-        .filter-section {
-            background: #252525;
-            padding: 20px;
-            border-bottom: 1px solid #333;
-        }
-        
-        .filter-form {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 15px;
-        }
-        
-        .filter-group {
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .filter-group label {
-            font-weight: bold;
-            margin-bottom: 5px;
-            color: #4a8cff;
-        }
-        
-        .filter-group input, .filter-group select {
-            padding: 10px;
-            border: 1px solid #444;
-            border-radius: 5px;
-            font-size: 1rem;
-            background: #333;
-            color: #e0e0e0;
-        }
-        
-        /* Borde rojo para el selector de Mes-Agrupación */
-        #mes-agrupacion {
-            border: 2px solid #ff4757;
-        }
-        
-        .chips-container {
-            position: relative;
-        }
-        
-        .chips-select {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #444;
-            border-radius: 5px;
-            font-size: 1rem;
-            background: #333;
-            color: #e0e0e0;
-            cursor: pointer;
-        }
-        
-        .chips-dropdown {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background: #333;
-            border: 1px solid #444;
-            border-radius: 5px;
-            max-height: 200px;
-            overflow-y: auto;
-            z-index: 1000;
-            display: none;
-            margin-top: 5px;
-        }
-        
-        .chips-dropdown.show { display: block; }
-        
-        .chips-option {
-            padding: 10px;
-            cursor: pointer;
-            border-bottom: 1px solid #444;
-        }
-        
-        .chips-option:hover {
-            background: #4a8cff;
-            color: white;
-        }
-        
-        .selected-chips {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 5px;
-            margin-top: 8px;
-        }
-        
-        .chip {
-            display: flex;
-            align-items: center;
-            background: #4a8cff;
-            color: white;
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-        }
-        
-        .chip-remove {
-            background: none;
-            border: none;
-            color: white;
-            margin-left: 5px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-        
-        .btn-container {
-            display: flex;
-            gap: 10px;
-            align-items: flex-end;
-        }
-        
-        .btn {
-            padding: 10px 20px;
-            background: #4a8cff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 1rem;
-            transition: background 0.3s;
-        }
-        
-        .btn:hover { background: #3a7cff; }
-        .btn-reset { background: #ff4757; }
-        .btn-reset:hover { background: #ff3747; }
-        .btn-word { background: #2b5797; }
-        .btn-word:hover { background: #1e3c6e; }
-        .btn-green { background: #00b894; }
-        .btn-green:hover { background: #00a884; }
-        .btn-orange { background: #e67e22; }
-        .btn-orange:hover { background: #d35400; }
-        
-        .summary-box {
-            background: #252525;
-            padding: 20px;
-            text-align: center;
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 20px;
-            border-bottom: 1px solid #333;
-        }
-        
-        .summary-item {
-            padding: 10px 20px;
-            border-radius: 10px;
-            background: #2d2d2d;
-            min-width: 180px;
-        }
-        
-        .total-minutes {
-            font-size: 1.8rem;
-            font-weight: bold;
-            color: #4a8cff;
-            margin: 5px 0;
-        }
-        
-        .total-minutes-simple {
-            font-size: 1.8rem;
-            font-weight: bold;
-            color: #ffa502;
-            margin: 5px 0;
-        }
-        
-        .cases-count {
-            font-size: 1.8rem;
-            font-weight: bold;
-            color: #ffa502;
-            margin: 5px 0;
-        }
-        
-        .filter-info {
-            text-align: center;
-            padding: 10px;
-            background: #333;
-            border-radius: 5px;
-            margin-top: 10px;
-            font-size: 0.8rem;
-            font-weight: bold;
-        }
-        
-        .attribution {
-            position: absolute;
-            bottom: 5px;
-            right: 5px;
-            z-index: 1000;
-            background: rgba(0, 0, 0, 0.7);
-            padding: 2px 5px;
-            border-radius: 3px;
-            font-size: 10px;
-        }
-        
-        .map-legend {
-            position: absolute;
-            bottom: 10px;
-            left: 10px;
-            z-index: 1000;
-            background: rgba(0, 0, 0, 0.8);
-            padding: 10px;
-            border-radius: 5px;
-            font-size: 12px;
-            backdrop-filter: blur(5px);
-        }
-        
-        .notification {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 15px 20px;
-            background: #00b894;
-            color: white;
-            border-radius: 5px;
-            z-index: 2000;
-            opacity: 0;
-            transform: translateY(-20px);
-            transition: opacity 0.3s, transform 0.3s;
-        }
-        
-        .notification.show {
-            opacity: 1;
-            transform: translateY(0);
-        }
-        
-        .chart-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.9);
-            z-index: 3000;
-            justify-content: center;
-            align-items: center;
-        }
-        
-        .chart-modal.show { display: flex; }
-        
-        .chart-container {
-            background: white;
-            padding: 20px;
-            border-radius: 15px;
-            max-width: 90vw;
-            max-height: 90vh;
-            position: relative;
-        }
-        
-        .chart-close {
-            position: absolute;
-            top: 10px;
-            right: 20px;
-            font-size: 30px;
-            cursor: pointer;
-            color: #333;
-        }
-        
-        footer {
-            text-align: center;
-            padding: 15px;
-            background: #bad405;
-            color: rgb(5, 5, 5);
-            font-size: 0.9rem;
-        }
-        
-        @media (max-width: 900px) {
-            .map-container { height: 400px; }
-            .table-container { max-height: 400px; }
-            .map-controls-bar { flex-direction: column; align-items: stretch; }
-            .control-group-horizontal { justify-content: center; }
-        }
-        
-        /* Estilos para el documento editable */
-        .editable-doc {
-            font-family: 'Segoe UI', 'Calibri', 'Times New Roman', serif;
-            background: white;
-            color: #1e1e1e;
-            padding: 40px;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        .editable-doc h1 { 
-            color: #bad405; 
-            margin-bottom: 5px; 
-            font-size: 28px;
-        }
-        .doc-header { 
-            text-align: center; 
-            margin-bottom: 30px; 
-            border-bottom: 3px solid #bad405; 
-            padding-bottom: 15px;
-        }
-        .doc-periodo {
-            font-size: 14px;
-            color: #555;
-            margin-top: 5px;
-        }
-        .doc-summary { 
-            display: flex; 
-            justify-content: space-around; 
-            margin: 25px 0; 
-            flex-wrap: wrap; 
-            gap: 15px; 
-        }
-        .doc-summary-item { 
-            background: #f8f9fa; 
-            padding: 15px 25px; 
-            border-radius: 8px; 
-            text-align: center; 
-            min-width: 180px;
-            border: 1px solid #e0e0e0;
-        }
-        .doc-summary-value { 
-            font-size: 28px; 
-            font-weight: bold; 
-            color: #4a8cff; 
-        }
-        .doc-section { 
-            margin: 35px 0; 
-            page-break-inside: avoid;
-        }
-        .doc-section-title { 
-            font-size: 20px; 
-            font-weight: bold; 
-            color: #4a8cff; 
-            margin-bottom: 15px; 
-            border-left: 5px solid #bad405; 
-            padding-left: 12px;
-            background: #f5f5f5;
-            padding: 8px 12px;
-            border-radius: 5px;
-        }
-        table { 
-            width: 100%; 
-            border-collapse: collapse; 
-            margin: 15px 0; 
-            font-size: 12px;
-            background: white;
-        }
-        th, td { 
-            border: 1px solid #ddd; 
-            padding: 10px 8px; 
-            text-align: left; 
-            vertical-align: top;
-        }
-        th { 
-            background: #4a8cff; 
-            color: white; 
-            font-weight: bold;
-        }
-        .repitencia-badge { 
-            display: inline-block; 
-            padding: 3px 10px; 
-            border-radius: 20px; 
-            font-size: 11px; 
-            font-weight: bold; 
-        }
-        .repitencia-alta { background: #ff4757; color: white; }
-        .repitencia-media { background: #ffa502; color: white; }
-        .repitencia-baja { background: #00b894; color: white; }
-        .doc-footer {
-            margin-top: 40px;
-            text-align: center;
-            font-size: 11px;
-            color: #888;
-            border-top: 1px solid #ddd;
-            padding-top: 15px;
-        }
-    </style>
+<meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1">
+<title>⚖️ Sistema de Registro Judicial</title>
+<style>
+:root {
+  --primary: #8b5cf6;
+  --primary-light: #a78bfa;
+  --dark: #0f172a;
+  --light: #f8fafc;
+  --gray: #64748b;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --error: #ef4444;
+  --bg: #0f172a;
+  --card: #1e293b;
+  --text: #f8fafc;
+  --border: #334155;
+  --detail-bg: #1e293b;
+  --detail-header: #334155;
+  --section-blue: rgba(59, 130, 246, 0.1);
+  --section-purple: rgba(139, 92, 246, 0.1);
+  --section-green: rgba(16, 185, 129, 0.1);
+  --section-amber: rgba(245, 158, 11, 0.1);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Inter', sans-serif;
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  padding: 20px;
+  line-height: 1.5;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+h1 {
+  color: var(--primary);
+  font-size: 28px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.alert-panel {
+  background-color: var(--warning);
+  color: white;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  animation: pulse 2s infinite;
+  cursor: pointer;
+}
+
+@keyframes pulse {
+  0% { opacity: 1 }
+  50% { opacity: .8 }
+  100% { opacity: 1 }
+}
+
+.review-badge {
+  background-color: var(--error);
+  color: white;
+  border-radius: 50%;
+  width: 25px;
+  height: 25px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  margin-left: 10px;
+}
+
+.form-container {
+  background-color: var(--card);
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.1);
+  padding: 30px;
+  border: 1px solid var(--border);
+  margin-bottom: 30px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+  position: relative;
+}
+
+label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+input, textarea, select {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  font-size: 16px;
+  background-color: var(--card);
+  color: var(--text);
+  transition: all 0.3s ease;
+}
+
+input:focus, textarea:focus, select:focus {
+  border-color: var(--primary-light);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(139,92,246,0.2);
+}
+
+.date-time-range {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.date-time-range > div {
+  flex: 1;
+  min-width: 150px;
+}
+
+button {
+  background-color: var(--primary);
+  color: white;
+  border: none;
+  padding: 14px 24px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 10px rgba(0,0,0,0.2);
+  opacity: 0.9;
+}
+
+.save-button {
+  background-color: var(--success);
+}
+
+.save-button:hover {
+  background-color: #0d9f6e;
+}
+
+.sheets-button {
+  background-color: #34a853;
+  margin-bottom: 20px;
+  width: 100%;
+}
+
+.sheets-button:hover {
+  background-color: #2d8e47;
+}
+
+.analysis-button {
+  background-color: #9333ea;
+}
+
+.analysis-button:hover {
+  background-color: #7e22ce;
+}
+
+.message {
+  padding: 16px;
+  border-radius: 8px;
+  margin-top: 20px;
+  text-align: center;
+  display: none;
+}
+
+.success {
+  background-color: var(--success);
+  color: white;
+}
+
+.error {
+  background-color: var(--error);
+  color: white;
+}
+
+.hidden {
+  display: none;
+}
+
+.calle-periodo-group {
+  margin-bottom: 15px;
+  border: 1px solid var(--border);
+  padding: 15px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.calle-periodo-group:hover {
+  border-color: var(--primary-light);
+}
+
+.eliminar-calle {
+  background-color: var(--error) !important;
+  margin-top: 10px;
+  padding: 8px 12px !important;
+  font-size: 14px !important;
+}
+
+.eliminar-calle:hover {
+  background-color: #dc2626 !important;
+}
+
+.campos-extra {
+  background-color: rgba(139,92,246,0.1);
+  padding: 15px;
+  border-radius: 8px;
+  margin-top: 20px;
+  border: 1px dashed var(--primary);
+  transition: all 0.3s ease;
+}
+
+.campos-extra:hover {
+  border-color: var(--primary-light);
+}
+
+.field-alert {
+  position: absolute;
+  bottom: -20px;
+  left: 0;
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  display: none;
+  transition: all 0.3s ease;
+}
+
+.alert-warning {
+  background-color: var(--warning);
+  color: white;
+}
+
+.alert-error {
+  background-color: var(--error);
+  color: white;
+}
+
+.has-warning {
+  border-color: var(--warning) !important;
+}
+
+.has-error {
+  border-color: var(--error) !important;
+}
+
+.modal-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0,0,0,0.7);
+  z-index: 1000;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-success {
+  background-color: var(--success);
+  padding: 30px;
+  border-radius: 10px;
+  text-align: center;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+th {
+  background-color: var(--primary);
+  color: white;
+  padding: 12px;
+  text-align: left;
+}
+
+td {
+  padding: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+tr:hover {
+  background-color: rgba(255,255,255,0.05);
+}
+
+.detalle-row {
+  display: none;
+}
+
+.detalle-row.visible {
+  display: table-row;
+}
+
+.detalle-content {
+  background-color: var(--detail-bg);
+  padding: 20px;
+  border-radius: 8px;
+  margin: 10px 0;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.detalle-section {
+  padding: 15px;
+  border-radius: 6px;
+  margin-bottom: 15px;
+}
+
+.detalle-section h4 {
+  color: var(--primary-light);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+}
+
+.detalle-section p {
+  margin: 8px 0;
+  line-height: 1.5;
+  white-space: pre-line;
+}
+
+.detalle-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.section-camaras {
+  background-color: var(--section-purple);
+  border-left: 4px solid var(--primary);
+}
+
+.section-estado {
+  background-color: var(--section-green);
+  border-left: 4px solid var(--success);
+}
+
+.section-calles {
+  background-color: var(--section-blue);
+  border-left: 4px solid #3b82f6;
+}
+
+.section-periodo {
+  background-color: var(--section-amber);
+  border-left: 4px solid var(--warning);
+}
+
+.section-fecha {
+  background-color: rgba(99, 102, 241, 0.1);
+  border-left: 4px solid #6366f1;
+}
+
+.section-observaciones {
+  background-color: rgba(236, 72, 153, 0.1);
+  border-left: 4px solid #ec4899;
+}
+
+/* ESTILOS CORREGIDOS PARA LOS BOTONES */
+.header-buttons {
+  display: flex;
+  gap: 3px;
+  flex-wrap: wrap;
+}
+
+.header-buttons button {
+  margin: 0;
+  white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  .date-time-range {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .alert-panel {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  th, td {
+    padding: 8px;
+  }
+  
+  .detalle-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  h1 {
+    font-size: 24px;
+  }
+  
+  .header-buttons {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .header-buttons button {
+    flex: 1;
+    min-width: 100px;
+    padding: 12px 16px;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .header-buttons {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .header-buttons button {
+    width: 100%;
+  }
+}
+</style>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel=stylesheet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel=stylesheet>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>⚖️ Análisis de Dispositivos y Eficacia Judicial</h1>
-            <p class="description">Secretaría de Seguridad | Municipalidad de Chascomús</p>
-        </header>
-        
-        <div class="filter-section">
-            <form id="filter-form" class="filter-form">
-                <div class="filter-group">
-                    <label for="mes-agrupacion">📅 Mes-Agrupación (filtro principal):</label>
-                    <select id="mes-agrupacion">
-                        <option value="">Todos los meses</option>
-                    </select>
-                </div>
-                <div class="filter-group">
-                    <label for="start-date">📆 Fecha desde (opcional):</label>
-                    <input type="date" id="start-date">
-                </div>
-                <div class="filter-group">
-                    <label for="end-date">📆 Fecha hasta (opcional):</label>
-                    <input type="date" id="end-date">
-                </div>
-                <div class="filter-group">
-                    <label>🏷️ Carátula:</label>
-                    <div class="chips-container">
-                        <div class="chips-select" id="caratula-select">Seleccionar carátulas...</div>
-                        <div class="chips-dropdown" id="caratula-dropdown"></div>
-                        <div class="selected-chips" id="caratula-chips"></div>
-                    </div>
-                </div>
-                <div class="filter-group">
-                    <label>⚖️ Fiscalía:</label>
-                    <div class="chips-container">
-                        <div class="chips-select" id="fiscalia-select">Seleccionar fiscalías...</div>
-                        <div class="chips-dropdown" id="fiscalia-dropdown"></div>
-                        <div class="selected-chips" id="fiscalia-chips"></div>
-                    </div>
-                </div>
-                <div class="filter-group btn-container">
-                    <button type="submit" class="btn">Aplicar Filtros</button>
-                    <button type="button" id="reset-btn" class="btn btn-reset">Restablecer</button>
-                    <button type="button" id="export-doc-btn" class="btn btn-word">📄 Descargar Informe</button>
-                </div>
-            </form>
-            <div id="filter-info" class="filter-info">Seleccioná un mes para comenzar</div>
-        </div>
-        
-        <div class="summary-box">
-            <div class="summary-item">
-                <div class="summary-label">📸 Minutos (Oficios):</div>
-                <div id="total-minutes-simple" class="total-minutes-simple">0 min</div>
-            </div>
-            <div class="summary-item">
-                <div class="summary-label">📸 Minutos de grabación totales:</div>
-                <div id="total-minutes" class="total-minutes">0 min</div>
-            </div>
-            <div class="summary-item">
-                <div class="summary-label">📋 Número de casos:</div>
-                <div id="cases-count" class="cases-count">0</div>
-            </div>
-            <div class="summary-item"><button id="export-grafico-barras-btn" class="btn btn-orange">📊 Gráfico Cámaras</button></div>
-            <div class="summary-item"><button id="export-minutos-camaras-btn" class="btn btn-green">📊 Minutos Por Cámara (xlsx)</button></div>
-        </div>
-        
-        <div class="map-main-section">
-            <div class="map-container" id="map-container">
-                <div id="map"></div>
-                <div class="map-legend">
-                    <div class="map-legend-title">Nivel de demanda</div>
-                    <div><span style="background:#ffeda0;display:inline-block;width:12px;height:12px;border-radius:50%;"></span> Bajo</div>
-                    <div><span style="background:#feb24c;display:inline-block;width:12px;height:12px;border-radius:50%;"></span> Medio</div>
-                    <div><span style="background:#f03b20;display:inline-block;width:12px;height:12px;border-radius:50%;"></span> Alto</div>
-                </div>
-                <div class="attribution" id="map-attribution">© OpenStreetMap</div>
-            </div>
-            <div class="map-controls-bar">
-                <div class="control-group-horizontal">
-                    <div class="control-item"><label>🔘 Tamaño:</label><input type="range" id="point-size" min="5" max="30" value="15" step="1"><span id="point-size-value">15px</span></div>
-                    <div class="control-item"><label>🌀 Opacidad:</label><input type="range" id="point-opacity" min="0.1" max="1" value="0.7" step="0.1"><span id="point-opacity-value">70%</span></div>
-                </div>
-                <div class="map-selector-buttons">
-                    <button id="btn-lienzo1" class="btn-map-sm active">🗺️ Lienzo 1</button>
-                    <button id="btn-lienzo2" class="btn-map-sm">🗺️ Lienzo 2</button>
-                </div>
-            </div>
-        </div>
-        
-        <div class="judicial-analysis-section">
-            <div class="analysis-header">
-                <h2>📈 Análisis Judicial <span style="font-size:0.9rem;">| Datos filtrados</span></h2>
-                <div class="analysis-tabs">
-                    <button id="tab-fiscalia-caratula" class="tab-btn active">Fiscalía vs Carátula</button>
-                    <button id="tab-caratula-cantidad" class="tab-btn">📊 Distribución de Casos por Carátula</button>
-                    <button id="tab-repitencia-camaras" class="tab-btn">📹 Cámaras más solicitadas</button>
-                </div>
-            </div>
-            <div class="analysis-content-wrapper">
-                <div id="analysis-content" class="table-container">
-                    <div class="loading" style="padding:40px;text-align:center;">Cargando análisis...</div>
-                </div>
-            </div>
-        </div>
-        
-        <footer>
-            <p>Secretaría de Seguridad | Municipalidad de Chascomús</p>
-        </footer>
-    </div>
+<div class=container>
+<div id=reviewAlert class="alert-panel hidden" onclick='window.open("https://docs.google.com/spreadsheets/d/1rmxYCNVaNZM6xjUij4GcMrMrkCwyVs5Gr9mZWB4oJdc/edit?gid=1709665157#gid=1709665157&filter=numero_oficio:~%23","_blank")'>
+<i class="fas fa-exclamation-triangle"></i>
+<span>Casos Pendientes de Revisión: </span>
+<span id=pendingCasesCount class=review-badge>0</span>
+<span style="margin-left:auto;font-size:.9em">(Click para ver)</span>
+</div>
 
-    <div id="chart-modal" class="chart-modal">
-        <div class="chart-container">
-            <div class="chart-close" id="chart-close">×</div>
-            <canvas id="minutos-chart" width="800" height="500"></canvas>
-            <div style="text-align:center;margin-top:10px;"><button id="download-chart-btn" class="btn">💾 Descargar Gráfico</button></div>
-        </div>
-    </div>
-    <div id="notification" class="notification">Listo</div>
+<header>
+<h1><i class="fas fa-file-contract"></i> Sistema de Registro Judicial | Municipio de Chascomús</h1>
+<div class="header-buttons">
+    <button id=btnCargar class=save-button>
+        <i class="fas fa-plus"></i> Cargar
+    </button>
+    <button id=btnBuscar class=sheets-button>
+        <i class="fas fa-search"></i> Buscar
+    </button>
+    <button id=btnAnalisis class="analysis-button" onclick='window.open("https://analisis-eficacia-judicial.netlify.app/","_blank")'>
+        <i class="fas fa-chart-bar"></i> Análisis
+    </button>
+</div>
+</header>
 
-    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-    <script>
-        const CAMERAS_API_URL = "https://api.sheetbest.com/sheets/87fb9cab-586c-4ace-ab7b-ad1a399cbee2/tabs/hoja2";
-        const EVENTS_API_URL = "https://api.sheetbest.com/sheets/87fb9cab-586c-4ace-ab7b-ad1a399cbee2/tabs/Reportes-Judiciales";
-        
-        let camerasData = [], eventsData = [], filteredEvents = [];
-        let caratulaOptions = new Set(), fiscaliaOptions = new Set(), mesAgrupacionOptions = new Set();
-        let markers = [], pointSize = 15, pointOpacity = 0.7, currentBaseLayer = 'openstreetmap';
-        let selectedCaratulas = [], selectedFiscalias = [], selectedMesAgrupacion = '';
-        let baseLayers = { openstreetmap: null, carto: null };
-        let minutosChart = null, currentTab = 'fiscalia-caratula';
-        let map, currentMapBounds = null;
-        
-        // Orden personalizado para fiscalías
-        function ordenarFiscalias(fiscalias) {
-            const ordenPrioridad = ["U.F.I N°9", "U.F.I N°10", "ESPECIALIZADA EN NARCOTRÁFICO"];
-            return fiscalias.sort((a, b) => {
-                const indexA = ordenPrioridad.indexOf(a);
-                const indexB = ordenPrioridad.indexOf(b);
-                if (indexA !== -1 && indexB !== -1) return indexA - indexB;
-                if (indexA !== -1) return -1;
-                if (indexB !== -1) return 1;
-                return a.localeCompare(b);
-            });
-        }
-        
-        function agruparFiscalia(fiscalia) {
-            if (!fiscalia) return "Otros";
-            if (fiscalia === "U.F.I N°10" || fiscalia === "U.F.I N°9" || fiscalia === "ESPECIALIZADA EN NARCOTRÁFICO") return fiscalia;
-            return "Otros";
-        }
-        
-        function procesarCamarasAportadas(camarasStr) {
-            if (!camarasStr || typeof camarasStr !== 'string') return [];
-            let procesado = camarasStr.replace(/\s*[-\/;]\s*/g, ',').replace(/\s+/g, ',');
-            return procesado.split(',').map(c => c.trim()).filter(c => c);
-        }
-        
-        function parseFechaSegura(fechaStr) {
-            if (!fechaStr) return null;
-            let parts = fechaStr.split('/');
-            if (parts.length === 3) return new Date(parseInt(parts[2]), parseInt(parts[1])-1, parseInt(parts[0]));
-            return null;
-        }
-        
-        function parseHoraSegura(horaStr) {
-            if (!horaStr) return null;
-            let parts = horaStr.split(':');
-            if(parts.length>=2) return {hora:parseInt(parts[0])||0, minuto:parseInt(parts[1])||0};
-            return null;
-        }
-        
-        function calcularMinutosReales(evento) {
-            if(!evento.fecha_inicio || !evento.hora_inicio || !evento.fecha_fin || !evento.hora_fin) return 0;
-            let startD = evento.fecha_inicio.split('/'), endD = evento.fecha_fin.split('/');
-            if(startD.length!==3 || endD.length!==3) return 0;
-            let startT = parseHoraSegura(evento.hora_inicio), endT = parseHoraSegura(evento.hora_fin);
-            if(!startT || !endT) return 0;
-            let startDate = new Date(parseInt(startD[2]), parseInt(startD[1])-1, parseInt(startD[0]), startT.hora, startT.minuto);
-            let endDate = new Date(parseInt(endD[2]), parseInt(endD[1])-1, parseInt(endD[0]), endT.hora, endT.minuto);
-            if(isNaN(startDate) || isNaN(endDate)) return 0;
-            return Math.round((endDate - startDate) / 60000);
-        }
-        
-        function obtenerCantidadDispositivos(evento) {
-            if(!evento.camaras_aportadas) return 0;
-            return procesarCamarasAportadas(evento.camaras_aportadas).length;
-        }
-        
-        function calcularMinutosPonderados(evento) {
-            let minutosReales = calcularMinutosReales(evento);
-            let cantDispositivos = obtenerCantidadDispositivos(evento);
-            if(cantDispositivos === 0) cantDispositivos = 1;
-            return minutosReales * cantDispositivos;
-        }
-        
-        function aplicarFiltrosFechas(evento, startDate, endDate) {
-            if (!startDate && !endDate) return true;
-            if (!startDate || !endDate) return true;
-            let evDate = parseFechaSegura(evento.fecha_inicio);
-            if (!evDate) return true;
-            let [sY,sM,sD] = startDate.split('-').map(Number);
-            let [eY,eM,eD] = endDate.split('-').map(Number);
-            let filterStart = new Date(sY,sM-1,sD);
-            let filterEnd = new Date(eY,eM-1,eD,23,59,59);
-            return evDate >= filterStart && evDate <= filterEnd;
-        }
-        
-        function applyFilters() {
-            let mesAgrupacion = document.getElementById('mes-agrupacion').value;
-            let startDate = document.getElementById('start-date').value;
-            let endDate = document.getElementById('end-date').value;
-            selectedMesAgrupacion = mesAgrupacion;
-            
-            filteredEvents = eventsData.filter(ev => {
-                if (mesAgrupacion && ev['mes-agrupacion'] !== mesAgrupacion) return false;
-                if (!aplicarFiltrosFechas(ev, startDate, endDate)) return false;
-                if (selectedCaratulas.length > 0 && !selectedCaratulas.includes(ev['caratula-agrupada'])) return false;
-                if (selectedFiscalias.length > 0 && !selectedFiscalias.includes(ev.fiscalia)) return false;
-                return true;
-            });
-            
-            let totalMinutosReales = 0, totalMinutosPonderados = 0;
-            filteredEvents.forEach(ev => {
-                totalMinutosReales += calcularMinutosReales(ev);
-                totalMinutosPonderados += calcularMinutosPonderados(ev);
-            });
-            
-            document.getElementById('total-minutes-simple').innerHTML = totalMinutosReales.toLocaleString() + ' min';
-            document.getElementById('total-minutes').innerHTML = totalMinutosPonderados.toLocaleString() + ' min';
-            document.getElementById('cases-count').innerHTML = filteredEvents.length;
-            
-            updateMapPoints();
-            updateFilterInfo();
-            updateAllAnalysis();
-        }
-        
-        function updateFilterInfo(){
-            let mes = document.getElementById('mes-agrupacion').value;
-            let startDate = document.getElementById('start-date').value;
-            let endDate = document.getElementById('end-date').value;
-            let info = mes ? `📅 Mes: ${mes}` : `📅 Todos los meses`;
-            if (startDate && endDate) info += ` | 📆 ${startDate.split('-').reverse().join('/')} → ${endDate.split('-').reverse().join('/')}`;
-            if (selectedCaratulas.length > 0) info += ` | 🏷️ ${selectedCaratulas.length === 1 ? selectedCaratulas[0] : selectedCaratulas.length + ' carátulas'}`;
-            if (selectedFiscalias.length > 0) info += ` | ⚖️ ${selectedFiscalias.length === 1 ? selectedFiscalias[0] : selectedFiscalias.length + ' fiscalías'}`;
-            document.getElementById('filter-info').innerHTML = info;
-        }
-        
-        function updateMapPoints() {
-            markers.forEach(m => map.removeLayer(m)); markers = [];
-            let counts = {};
-            filteredEvents.forEach(ev => {
-                if(ev.camaras_aportadas){
-                    procesarCamarasAportadas(ev.camaras_aportadas).forEach(camId => {
-                        let cam = camerasData.find(c => c.nombre_camara === camId);
-                        if(cam && cam.Y && cam.X){
-                            let key = `${cam.Y},${cam.X}`;
-                            counts[key] = counts[key] || {count:0, camera:cam};
-                            counts[key].count++;
-                        }
-                    });
-                }
-            });
-            let max = Math.max(...Object.values(counts).map(v=>v.count),1);
-            Object.values(counts).forEach(({camera, count}) => {
-                let size = 5 + (count/max)*(pointSize-5);
-                let color = count/max > 0.66 ? '#f03b20' : (count/max > 0.33 ? '#feb24c' : '#ffeda0');
-                let marker = L.circleMarker([parseFloat(camera.Y), parseFloat(camera.X)], {
-                    radius: size, fillColor: color, color: '#000', weight: 1, fillOpacity: pointOpacity
-                }).addTo(map);
-                marker.bindPopup(`<strong>Cámara ${camera.nombre_camara}</strong><br>${camera.direccion||''}<br>Participaciones: ${count}`);
-                markers.push(marker);
-            });
-            if(markers.length && !currentMapBounds) map.fitBounds(L.featureGroup(markers).getBounds().pad(0.1));
-        }
-        
-        // Generar tablas para el documento editable (separadas)
-        function generarTablaCasosEditable(){
-            let matrixCasos = {}, fiscaliasSet = new Set(), caratulasSet = new Set();
-            filteredEvents.forEach(ev=>{
-                let f = agruparFiscalia(ev.fiscalia);
-                let c = ev['caratula-agrupada'] || 'Sin carátula';
-                fiscaliasSet.add(f); caratulasSet.add(c);
-                matrixCasos[f] = matrixCasos[f]||{};
-                matrixCasos[f][c] = (matrixCasos[f][c]||0)+1;
-            });
-            let fiscOrd = ordenarFiscalias(Array.from(fiscaliasSet));
-            let carOrd = Array.from(caratulasSet).sort();
-            
-            let html = '<div class="doc-section"><div class="doc-section-title">📊 Casos por Fiscalía/Carátula</div>';
-            html += '<table><thead> <th>Fiscalía</th>';
-            carOrd.forEach(c=>html+=`<th>${c.length>20?c.slice(0,18)+'..':c}</th>`);
-            html+='<th>Total</th> </thead><tbody>';
-            fiscOrd.forEach(f=>{
-                let rowTotal=0;
-                html+=`<tr><td><strong>${f}</strong></td>`;
-                carOrd.forEach(c=>{let val=matrixCasos[f]?.[c]||0; rowTotal+=val; html+=`<td>${val||'-'}</td>`;});
-                html+=`<td><strong>${rowTotal}</strong></td></tr>`;
-            });
-            html+=`<tr style="background:#f0f0f0;"><td><strong>TOTAL</strong></td>`;
-            let grand=0; carOrd.forEach(c=>{let col=0; fiscOrd.forEach(f=>col+=matrixCasos[f]?.[c]||0); grand+=col; html+=`<td><strong>${col}</strong></td>`;});
-            html+=`<td><strong>${grand}</strong></td></tr>`;
-            html+=`</tbody>`;
-            html+=`</div>`;
-            return html;
-        }
-        
-        function generarTablaMinutosEditable(){
-            let matrixMinutosPonderados = {}, fiscaliasSet = new Set(), caratulasSet = new Set();
-            filteredEvents.forEach(ev=>{
-                let f = agruparFiscalia(ev.fiscalia);
-                let c = ev.caratula || 'Sin carátula';
-                let minsPonderados = calcularMinutosPonderados(ev);
-                fiscaliasSet.add(f); caratulasSet.add(c);
-                matrixMinutosPonderados[f] = matrixMinutosPonderados[f]||{};
-                matrixMinutosPonderados[f][c] = (matrixMinutosPonderados[f][c]||0) + minsPonderados;
-            });
-            let fiscOrd = ordenarFiscalias(Array.from(fiscaliasSet));
-            let carOrd = Array.from(caratulasSet).sort();
-            
-            let html = '<div class="doc-section"><div class="doc-section-title">⏱️ Minutos de Grabación Solicitados por Fiscalía y Carátula</div>';
-            html+='<table><thead><th>Fiscalía</th>';
-            carOrd.forEach(c=>html+=`<th>${c.length>20?c.slice(0,18)+'..':c}</th>`);
-            html+='<th>Total Min</th></thead><tbody>';
-            fiscOrd.forEach(f=>{
-                let rowMin=0;
-                html+=`<tr><td><strong>${f}</strong></td>`;
-                carOrd.forEach(c=>{let mins=matrixMinutosPonderados[f]?.[c]||0; rowMin+=mins; html+=`<td>${mins>0?mins.toLocaleString():'-'}</td>`;});
-                html+=`<td><strong>${rowMin.toLocaleString()} min</strong></td></tr>`;
-            });
-            html+=`<tr style="background:#f0f0f0;"><td><strong>TOTAL</strong></td>`;
-            let grandMin=0; carOrd.forEach(c=>{let col=0; fiscOrd.forEach(f=>col+=matrixMinutosPonderados[f]?.[c]||0); grandMin+=col; html+=`<td><strong>${col.toLocaleString()} min</strong></td>`;});
-            html+=`<td><strong>${grandMin.toLocaleString()} min</strong></td></tr>`;
-            html+=`</tbody></table></div>`;
-            return html;
-        }
-        
-        function generarTablaCaratulaCantidadEditable(){
-            let counts={}, minsPonderados={};
-            filteredEvents.forEach(ev=>{let c=ev.caratula||'Sin carátula'; counts[c]=(counts[c]||0)+1; minsPonderados[c]=(minsPonderados[c]||0)+calcularMinutosPonderados(ev);});
-            let sorted=Object.entries(counts).sort((a,b)=>b[1]-a[1]);
-            let totalCasos=filteredEvents.length;
-            let html='<div class="doc-section"><div class="doc-section-title">📊 Distribución de Casos por Carátula</div><table><thead><th>Carátula</th><th>Casos</th><th>%</th><th>Minutos de Grabación</th></thead><tbody>';
-            sorted.forEach(([c,count])=>{let pct=totalCasos?((count/totalCasos)*100).toFixed(1):0; html+=`<tr><td><strong>${c}</strong></td><td><strong>${count}</strong></td><td>${pct}%</td><td><strong>${minsPonderados[c].toLocaleString()} min</strong></td></tr>`;});
-            html+=`<tr style="background:#f0f0f0;"><td><strong>TOTAL</strong></td><td><strong>${totalCasos}</strong></td><td><strong>100%</strong></td><td><strong>${Object.values(minsPonderados).reduce((a,b)=>a+b,0).toLocaleString()} min</strong></td></tr>`;
-            html+='</tbody></table></div>';
-            return html;
-        }
-        
-        function generarRepitenciaCamarasEditable(){
-            let camCounts={}, casosConCams=0;
-            filteredEvents.forEach(ev=>{
-                if(ev.camaras_aportadas){
-                    let cams=procesarCamarasAportadas(ev.camaras_aportadas);
-                    if(cams.length){ casosConCams++; cams.forEach(c=>camCounts[c]=(camCounts[c]||0)+1); }
-                }
-            });
-            let sorted=Object.entries(camCounts).sort((a,b)=>b[1]-a[1]);
-            if(!sorted.length) return '<div class="doc-section"><div class="doc-section-title">📹 Cámaras más solicitadas por la Justicia</div><p>Sin datos de cámaras</p></div>';
-            let html=`<div class="doc-section"><div class="doc-section-title">📹 Cámaras más solicitadas por la Justicia</div>
-            <div style="padding:10px;background:#f5f5f5;margin-bottom:15px;"><strong>📊 Casos con solicitud de cámaras: ${casosConCams} | Total de solicitudes: ${Object.values(camCounts).reduce((a,b)=>a+b,0)}</strong></div>
-            <table><thead><th>Cámara</th><th>Veces Solicitada</th><th>% de casos</th><th>Nivel de demanda</th></thead><tbody>`;
-            sorted.forEach(([cam,count])=>{
-                let pct= casosConCams?((count/casosConCams)*100).toFixed(1):0;
-                let badge = count>10?'🔴 Alta':(count>5?'🟡 Media':'🟢 Baja');
-                let cls = count>10?'repitencia-alta':(count>5?'repitencia-media':'repitencia-baja');
-                html+=`<tr><td><strong>Cámara ${cam}</strong></td><td><strong>${count}</strong></td><td>${pct}%</td><td><span class="repitencia-badge ${cls}">${badge}</span></td></tr>`;
-            });
-            html+='</tbody></table></div>';
-            return html;
-        }
-        
-        function exportarDocumentoEditable() {
-            showNotification("📄 Generando documento...");
-            
-            let mesSeleccionado = document.getElementById('mes-agrupacion').value || "Todos los meses";
-            let startDate = document.getElementById('start-date').value;
-            let endDate = document.getElementById('end-date').value;
-            let periodoTexto = mesSeleccionado;
-            if (startDate && endDate) {
-                periodoTexto += ` (${startDate.split('-').reverse().join('/')} al ${endDate.split('-').reverse().join('/')})`;
+<div class=form-container id=formCargar>
+<form id=oficioForm>
+<button type=button class=sheets-button onclick='window.open("https://docs.google.com/spreadsheets/d/1rmxYCNVaNZM6xjUij4GcMrMrkCwyVs5Gr9mZWB4oJdc/edit?gid=1709665157#gid=1709665157","_blank")'>
+<i class="fab fa-google-drive"></i> Ver Hoja de calculo
+</button>
+
+<div class=form-group>
+<label for=numero_oficio>N° de Oficio *</label>
+<input type=text id=numero_oficio required placeholder="IPP N°.....">
+<div id=numero_oficio_alert class="field-alert alert-warning">
+<i class="fas fa-exclamation-triangle"></i>  Este Oficio se cargará de forma provisoria y se contabilizará en el alerta (#). Recuerda actualizarlo luego.
+</div>
+</div>
+
+<div class=form-group>
+<label for=numero_identificacion>N° Unico de Identificación *</label>
+<input type=text id=numero_identificacion required placeholder="Ej: IPP N°...">
+<div id=numero_identificacion_alert class="field-alert alert-error">
+<i class="fas fa-times-circle"></i>  Este número ya existe en el sistema.
+</div>
+</div>
+
+<!-- NUEVO CAMPO: Mes de Agrupación -->
+<div class=form-group>
+<label for=mes_agrupacion>Mes de Agrupación</label>
+<input type=text id=mes_agrupacion placeholder="mes de agrupacion (ej: enero)">
+<small style="display: block; color: #94a3b8; margin-top: 5px;">(en minúsculas y sin acento)</small>
+</div>
+
+<div class=form-group>
+<label for=fiscalia>Fiscalía Interviniente *</label>
+<select id=fiscalia required onchange=mostrarCampoOtraFiscalia()>
+<option value="">Seleccione...</option>
+<option value="U.F.I N°10">U.F.I N°10</option>
+<option value="U.F.I N°9">U.F.I N°9</option>
+<option value="ESPECIALIZADA EN NARCOTRÁFICO">ESP. NARCOTRÁFICO</option>
+<option value=OTRO>OTRO (Especificar)</option>
+</select>
+</div>
+
+<div id=otraFiscaliaGroup class="form-group hidden">
+<label for=otra_fiscalia>Especifique *</label>
+<input type=text id=otra_fiscalia>
+</div>
+
+<div class=form-group>
+<label for=caratula>Carátula *</label>
+<input type=text id=caratula required placeholder="Ej: Robo agravado">
+</div>
+
+<!-- NUEVO CAMPO: Carátula Agrupada -->
+<div class=form-group>
+<label for=caratula_agrupada>Carátula Agrupada</label>
+<select id=caratula_agrupada>
+<option value="">Seleccione...</option>
+<option value="AMENAZAS">AMENAZAS</option>
+<option value="DOMICILIO">DOMICILIO</option>
+<option value="HURTO">HURTO</option>
+<option value="LESIONES">LESIONES</option>
+<option value="LEY 23.737">LEY 23.737</option>
+<option value="OTRO">OTRO</option>
+<option value="ROBO">ROBO</option>
+</select>
+</div>
+
+<div class=form-group>
+<label>Calles y Períodos Solicitados *</label>
+<div id=calles-container>
+<div class=calle-periodo-group>
+<div class=form-group>
+<label>Calle(s)</label>
+<textarea class=calle-text rows=2 required placeholder="Ej: Av. Lastra 1200"></textarea>
+</div>
+<div class=date-time-range>
+<div>
+<label>Fecha Inicio</label>
+<input type=date class=fecha-inicio required>
+</div>
+<div>
+<label>Hora Inicio</label>
+<input type=time class=hora-inicio required>
+</div>
+<div>
+<label>Fecha Fin</label>
+<input type=date class=fecha-fin required>
+</div>
+<div>
+<label>Hora Fin</label>
+<input type=time class=hora-fin required>
+</div>
+</div>
+</div>
+</div>
+<button type=button id=agregar-calle style="margin-top:10px">
+<i class="fas fa-plus"></i> Agregar otra calle
+</button>
+</div>
+
+<div class=campos-extra>
+<div class=form-group>
+<label for=camaras_aportadas>🎥 Cámaras Aportadas  *</label>
+<textarea id=camaras_aportadas rows=3 required placeholder="Códigos de cámaras"></textarea>
+</div>
+<div class=form-group>
+<label for=observaciones>📝 Observaciones</label>
+<textarea id=observaciones rows=2 placeholder="Detalles..."></textarea>
+</div>
+</div>
+
+<div class=form-group>
+<label for=estado_material>Estado del Material Filmico       *</label>
+<select id=estado_material required onchange=mostrarCamposEstado()>
+<option value="">Seleccione...</option>
+<option value="Entrega Normal">Entrega Normal</option>
+<option value="Rechazado por Irregularidades">Rechazado</option>
+<option value="No se dispone de material"> Material No disponible</option>
+</select>
+</div>
+
+<div id=motivoRechazoGroup class="form-group hidden">
+<label for=motivo_rechazo>Motivo de Rechazo *</label>
+<textarea id=motivo_rechazo rows=2 placeholder="Irregularidades..."></textarea>
+</div>
+
+<div id=tipoNoDisponibleGroup class="form-group hidden">
+<label for=tipo_no_disponible>Tipo *</label>
+<select id=tipo_no_disponible>
+<option value="">Seleccione...</option>
+<option value="Cámara sin funcionamiento">Cámara sin funcionamiento</option>
+<option value="No hay cámaras">Sin cámaras</option>
+<option value="No se visualiza el evento">No se visualiza el evento</option>
+</select>
+</div>
+
+<button type=submit class=save-button><i class="fas fa-save"></i> Guardar</button>
+</form>
+<div class="message success" id=successMessage>
+<i class="fas fa-check-circle"></i> Oficio guardado
+</div>
+<div class="message error" id=errorMessage>
+<i class="fas fa-exclamation-circle"></i> Error al guardar
+</div>
+</div>
+
+<div class=form-container id=formBuscar style="display:none">
+<h2><i class="fas fa-search"></i> Buscar Oficios</h2>
+
+<div class=form-group>
+<label for=buscarTexto>Buscar por N° de Oficio, Fiscalía o Carátula</label>
+<input type=text id=buscarTexto placeholder="Ej: IPP N°... / U.F.I N°10 / Robo...">
+</div>
+
+<div class=form-group>
+<label for=buscarIdentificacion>Buscar por N° de Identificación</label>
+<input type=text id=buscarIdentificacion placeholder="Ej: IPP N°...">
+</div>
+
+<div class=date-time-range>
+<div class=form-group>
+<label for=fechaDesde>Desde</label>
+<input type=date id=fechaDesde>
+</div>
+<div class=form-group>
+<label for=fechaHasta>Hasta</label>
+<input type=date id=fechaHasta>
+</div>
+</div>
+
+<button id=btnBuscarOficios class=save-button>
+<i class="fas fa-search"></i> Buscar
+</button>
+
+<div id=resultados style="margin-top:20px">
+<table>
+<thead>
+<tr>
+<th style="width:120px">N° Oficio</th>
+<th style="width:100px">Fecha</th>
+<th>N° Identificación</th>
+<th>Carátula</th>
+<th>Fiscalía</th>
+<th style="width:50px"></th>
+</tr>
+</thead>
+<tbody id=tablaResultados>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+
+<div id=successModal class=modal-overlay>
+<div class=modal-success>
+<h3><i class="fas fa-check-circle"></i> ¡Éxito!</h3>
+<p>El oficio se ha guardado correctamente</p>
+<button onclick="document.getElementById('successModal').style.display='none'" style="margin-top:15px;width:100%">Aceptar</button>
+</div>
+</div>
+
+<script>
+const SHEETBEST_URL = "https://api.sheetbest.com/sheets/87fb9cab-586c-4ace-ab7b-ad1a399cbee2/tabs/Reportes-Judiciales";
+let existingData = [];
+let pendingCases = 0;
+
+function mostrarCampoOtraFiscalia() {
+    const fiscaliaSelect = document.getElementById("fiscalia");
+    const otraFiscaliaGroup = document.getElementById("otraFiscaliaGroup");
+    
+    if (fiscaliaSelect.value === "OTRO") {
+        otraFiscaliaGroup.classList.remove("hidden");
+    } else {
+        otraFiscaliaGroup.classList.add("hidden");
+        document.getElementById("otra_fiscalia").value = ""; 
+    }
+}
+
+document.addEventListener("DOMContentLoaded", async () => {
+    try {
+        const response = await fetch(SHEETBEST_URL);
+        existingData = await response.json();
+        existingData.forEach(item => {
+            if(item.fecha_carga) {
+                const [fecha, hora] = item.fecha_carga.split(' ');
+                const [dia, mes, anio] = fecha.split('/');
+                item.fechaObj = new Date(`${mes}/${dia}/${anio}`);
             }
-            
-            let minutosReales = document.getElementById('total-minutes-simple').innerText;
-            let minutosPonderados = document.getElementById('total-minutes').innerText;
-            let totalCasos = document.getElementById('cases-count').innerText;
-            
-            let tablasHTML = '';
-            tablasHTML += generarTablaCasosEditable();
-            tablasHTML += generarTablaMinutosEditable();
-            tablasHTML += generarTablaCaratulaCantidadEditable();
-            tablasHTML += generarRepitenciaCamarasEditable();
-            
-            let docHtml = `<!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="UTF-8">
-                <title>Informe Análisis Judicial - ${periodoTexto}</title>
-                <style>
-                    body {
-                        font-family: 'Segoe UI', 'Calibri', 'Times New Roman', serif;
-                        margin: 0;
-                        padding: 40px;
-                        background: white;
-                    }
-                    .editable-doc {
-                        max-width: 1200px;
-                        margin: 0 auto;
-                        background: white;
-                    }
-                    .editable-doc h1 { 
-                        color: #bad405; 
-                        margin-bottom: 5px; 
-                        font-size: 28px;
-                    }
-                    .doc-header { 
-                        text-align: center; 
-                        margin-bottom: 30px; 
-                        border-bottom: 3px solid #bad405; 
-                        padding-bottom: 15px;
-                    }
-                    .doc-periodo {
-                        font-size: 14px;
-                        color: #555;
-                        margin-top: 5px;
-                    }
-                    .doc-summary { 
-                        display: flex; 
-                        justify-content: space-around; 
-                        margin: 25px 0; 
-                        flex-wrap: wrap; 
-                        gap: 15px; 
-                    }
-                    .doc-summary-item { 
-                        background: #f8f9fa; 
-                        padding: 15px 25px; 
-                        border-radius: 8px; 
-                        text-align: center; 
-                        min-width: 180px;
-                        border: 1px solid #e0e0e0;
-                    }
-                    .doc-summary-value { 
-                        font-size: 28px; 
-                        font-weight: bold; 
-                        color: #4a8cff; 
-                    }
-                    .doc-section { 
-                        margin: 35px 0; 
-                        page-break-inside: avoid;
-                    }
-                    .doc-section-title { 
-                        font-size: 20px; 
-                        font-weight: bold; 
-                        color: #4a8cff; 
-                        margin-bottom: 15px; 
-                        border-left: 5px solid #bad405; 
-                        padding-left: 12px;
-                        background: #f5f5f5;
-                        padding: 8px 12px;
-                        border-radius: 5px;
-                    }
-                    table { 
-                        width: 100%; 
-                        border-collapse: collapse; 
-                        margin: 15px 0; 
-                        font-size: 12px;
-                        background: white;
-                    }
-                    th, td { 
-                        border: 1px solid #ddd; 
-                        padding: 10px 8px; 
-                        text-align: left; 
-                        vertical-align: top;
-                    }
-                    th { 
-                        background: #4a8cff; 
-                        color: white; 
-                        font-weight: bold;
-                    }
-                    .repitencia-badge { 
-                        display: inline-block; 
-                        padding: 3px 10px; 
-                        border-radius: 20px; 
-                        font-size: 11px; 
-                        font-weight: bold; 
-                    }
-                    .repitencia-alta { background: #ff4757; color: white; }
-                    .repitencia-media { background: #ffa502; color: white; }
-                    .repitencia-baja { background: #00b894; color: white; }
-                    .doc-footer {
-                        margin-top: 40px;
-                        text-align: center;
-                        font-size: 11px;
-                        color: #888;
-                        border-top: 1px solid #ddd;
-                        padding-top: 15px;
-                    }
-                </style>
-            </head>
-            <body>
-                <div class="editable-doc">
-                    <div class="doc-header">
-                        <h1>⚖️ Análisis de Dispositivos y Eficacia Judicial</h1>
-                        <p>Secretaría de Seguridad | Municipalidad de Chascomús</p>
-                        <p class="doc-periodo"><strong>Periodo analizado:</strong> ${periodoTexto}</p>
-                        <p class="doc-periodo"><strong>Fecha de generación:</strong> ${new Date().toLocaleString('es-AR')}</p>
-                    </div>
-                    
-                    <div class="doc-summary">
-                        <div class="doc-summary-item"><div>📸 Minutos de Oficios</div><div class="doc-summary-value">${minutosReales}</div></div>
-                        <div class="doc-summary-item"><div>📸 Minutos de grabación solicitados</div><div class="doc-summary-value">${minutosPonderados}</div></div>
-                        <div class="doc-summary-item"><div>📋 Casos analizados</div><div class="doc-summary-value">${totalCasos}</div></div>
-                    </div>
-                    
-                    ${tablasHTML}
-                    
-                    <div class="doc-footer">
-                        Informe generado automáticamente - Municipalidad de Chascomús<br>
-                        Secretaría de Seguridad
+        });
+        updatePendingCases();
+        setupFieldMonitoring();
+    } catch(error) {
+        console.error("Error:", error);
+        document.getElementById("errorMessage").style.display = "block";
+    }
+});
+
+document.getElementById("btnCargar").addEventListener("click", () => {
+    document.getElementById("formCargar").style.display = "block";
+    document.getElementById("formBuscar").style.display = "none";
+});
+
+document.getElementById("btnBuscar").addEventListener("click", () => {
+    document.getElementById("formCargar").style.display = "none";
+    document.getElementById("formBuscar").style.display = "block";
+    mostrarResultados(existingData);
+});
+
+document.getElementById("btnBuscarOficios").addEventListener("click", () => {
+    const texto = document.getElementById("buscarTexto").value.toLowerCase();
+    const identificacion = document.getElementById("buscarIdentificacion").value.toLowerCase();
+    const desde = document.getElementById("fechaDesde").value;
+    const hasta = document.getElementById("fechaHasta").value;
+    
+    const resultados = existingData.filter(item => {
+        const cumpleTexto = texto ?
+            (item.numero_oficio?.toLowerCase().includes(texto) ||
+             item.fiscalia?.toLowerCase().includes(texto) ||
+             item.caratula?.toLowerCase().includes(texto)) : true;
+        
+        const cumpleIdentificacion = identificacion ?
+            item.numero_identificacion?.toLowerCase().includes(identificacion) : true;
+        
+        let cumpleFecha = true;
+        if(desde && hasta && item.fechaObj) {
+            const desdeDate = new Date(desde);
+            const hastaDate = new Date(hasta);
+            cumpleFecha = item.fechaObj >= desdeDate && item.fechaObj <= hastaDate;
+        }
+        
+        return cumpleTexto && cumpleIdentificacion && cumpleFecha;
+    });
+    
+    mostrarResultados(resultados);
+});
+
+function mostrarResultados(data) {
+    const tbody = document.getElementById("tablaResultados");
+    tbody.innerHTML = "";
+    
+    if(data.length === 0) {
+        tbody.innerHTML = `<tr><td colspan=6 style="text-align:center;padding:20px">No se encontraron resultados</td></tr>`;
+        return;
+    }
+    
+    data.forEach((item, index) => {
+        const tr = document.createElement("tr");
+        tr.style.cursor = "pointer";
+        tr.innerHTML = `
+            <td>${item.numero_oficio || "-"}</td>
+            <td>${item.fecha_carga?.split(' ')[0] || "-"}</td>
+            <td>${item.numero_identificacion || "-"}</td>
+            <td>${item.caratula || "-"}</td>
+            <td>${item.fiscalia || "-"}</td>
+            <td style="text-align:center"><i class="fas fa-chevron-down"></i></td>
+        `;
+        
+        const trDetalle = document.createElement("tr");
+        trDetalle.className = "detalle-row";
+        trDetalle.innerHTML = `
+            <td colspan=6>
+                <div class="detalle-content">
+                    <div class="detalle-grid">
+                        <div class="detalle-section section-camaras">
+                            <h4><i class="fas fa-video"></i> Cámaras aportadas</h4>
+                            <p>${item.camaras_aportadas || "No especificado"}</p>
+                        </div>
+                        <div class="detalle-section section-estado">
+                            <h4><i class="fas fa-info-circle"></i> Estado del material</h4>
+                            <p>${item.estado_material || "No especificado"}</p>
+                        </div>
+                        <div class="detalle-section section-calles">
+                            <h4><i class="fas fa-road"></i> Calles solicitadas</h4>
+                            <p>${item.calles || "No especificado"}</p>
+                        </div>
+                        <div class="detalle-section section-periodo">
+                            <h4><i class="fas fa-clock"></i> Período solicitado</h4>
+                            <p>${item.fecha_inicio ? `${formatDate(item.fecha_inicio)} ${item.hora_inicio || ""}` : "No especificado"} <strong>Hasta</strong> ${item.fecha_fin ? `${formatDate(item.fecha_fin)} ${item.hora_fin || ""}` : "No especificado"}</p>
+                        </div>
+                        <div class="detalle-section section-fecha">
+                            <h4><i class="fas fa-calendar-day"></i> Fecha de carga</h4>
+                            <p>${item.fecha_carga || "No especificado"}</p>
+                        </div>
+                        <div class="detalle-section section-observaciones">
+                            <h4><i class="fas fa-comment-alt"></i> Observaciones</h4>
+                            <p>${item.observaciones || "Sin observaciones"}</p>
+                        </div>
                     </div>
                 </div>
-            </body>
-            </html>`;
-            
-            const blob = new Blob([docHtml], { type: 'application/msword' });
-            const link = document.createElement('a');
-            const url = URL.createObjectURL(blob);
-            link.href = url;
-            link.download = `Informe_Analisis_Judicial_${periodoTexto.replace(/\s+/g, '_')}.doc`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-            
-            showNotification("✅ Documento generado correctamente");
-        }
+            </td>
+        `;
         
-        function updateAllAnalysis(){
-            let container = document.getElementById('analysis-content');
-            if(currentTab==='fiscalia-caratula') container.innerHTML = generarTablaFiscaliaCaratula();
-            else if(currentTab==='caratula-cantidad') container.innerHTML = generarTablaCaratulaCantidad();
-            else container.innerHTML = generarRepitenciaCamaras();
-        }
-        
-        function generarTablaFiscaliaCaratula(){
-            let matrixCasos = {}, matrixMinutosPonderados = {}, fiscaliasSet = new Set(), caratulasSet = new Set();
-            filteredEvents.forEach(ev=>{
-                let f = agruparFiscalia(ev.fiscalia);
-                let c = ev['caratula-agrupada'] || 'Sin carátula';
-                let minsPonderados = calcularMinutosPonderados(ev);
-                fiscaliasSet.add(f); caratulasSet.add(c);
-                matrixCasos[f] = matrixCasos[f]||{};
-                matrixCasos[f][c] = (matrixCasos[f][c]||0)+1;
-                matrixMinutosPonderados[f] = matrixMinutosPonderados[f]||{};
-                matrixMinutosPonderados[f][c] = (matrixMinutosPonderados[f][c]||0) + minsPonderados;
-            });
-            let fiscOrd = ordenarFiscalias(Array.from(fiscaliasSet));
-            let carOrd = Array.from(caratulasSet).sort();
-            
-            let html = '<div style="margin:10px 0 5px;font-weight:bold;">📊 Casos por Fiscalía/Carátula</div><table class="analysis-table"><thead> <th>Fiscalía</th>';
-            carOrd.forEach(c=>html+=`<th>${c.length>15?c.slice(0,12)+'..':c}</th>`);
-            html+='<th>Total</th> </thead><tbody>';
-            fiscOrd.forEach(f=>{
-                let rowTotal=0;
-                html+=`<tr><td><strong>${f}</strong></td>`;
-                carOrd.forEach(c=>{let val=matrixCasos[f]?.[c]||0; rowTotal+=val; html+=`<td><strong>${val||'-'}</strong></td>`;});
-                html+=`<td><strong>${rowTotal}</strong></td></tr>`;
-            });
-            html+=`<tr style="background:#3a3a3a;"><td><strong>TOTAL</strong></td>`;
-            let grand=0; carOrd.forEach(c=>{let col=0; fiscOrd.forEach(f=>col+=matrixCasos[f]?.[c]||0); grand+=col; html+=`<td><strong>${col}</strong></td>`;});
-            html+=`<td><strong>${grand}</strong></td></tr>`;
-            html+=`</tbody>`;
-            html+=`<div style="margin:20px 0 5px;font-weight:bold;">⏱️ Minutos de Grabación Solicitados por Fiscalía y Carátula</div><table class="analysis-table"><thead><th>Fiscalía</th>`;
-            carOrd.forEach(c=>html+=`<th>${c.length>15?c.slice(0,12)+'..':c}</th>`);
-            html+='<th>Total Min</th></thead><tbody>';
-            fiscOrd.forEach(f=>{
-                let rowMin=0;
-                html+=`<tr><td><strong>${f}</strong></td>`;
-                carOrd.forEach(c=>{let mins=matrixMinutosPonderados[f]?.[c]||0; rowMin+=mins; html+=`<td><strong>${mins>0?mins.toLocaleString():'-'}</strong></td>`;});
-                html+=`<td><strong>${rowMin.toLocaleString()} min</strong></td></tr>`;
-            });
-            html+=`<tr style="background:#3a3a3a;"><td><strong>TOTAL</strong></td>`;
-            let grandMin=0; carOrd.forEach(c=>{let col=0; fiscOrd.forEach(f=>col+=matrixMinutosPonderados[f]?.[c]||0); grandMin+=col; html+=`<td><strong>${col.toLocaleString()} min</strong></td>`;});
-            html+=`<td><strong>${grandMin.toLocaleString()} min</strong></td></tr>`;
-            html+=`</tbody>`;
-            return html;
-        }
-        
-        function generarTablaCaratulaCantidad(){
-            let counts={}, minsPonderados={};
-            filteredEvents.forEach(ev=>{let c=ev['caratula-agrupada'] ||'Sin carátula'; counts[c]=(counts[c]||0)+1; minsPonderados[c]=(minsPonderados[c]||0)+calcularMinutosPonderados(ev);});
-            let sorted=Object.entries(counts).sort((a,b)=>b[1]-a[1]);
-            let totalCasos=filteredEvents.length;
-            let html='<table class="analysis-table"><thead><th>Carátula</th><th>Casos</th><th>%</th><th>Minutos de Grabación</th></thead><tbody>';
-            sorted.forEach(([c,count])=>{let pct=totalCasos?((count/totalCasos)*100).toFixed(1):0; html+=`<tr><td><strong>${c}</strong></td><td><strong>${count}</strong></td><td><strong>${pct}%</strong></td><td><strong>${minsPonderados[c].toLocaleString()} min</strong></td></tr>`;});
-            html+=`<tr style="background:#4a8cff;"><td><strong>TOTAL</strong></td><td><strong>${totalCasos}</strong></td><td><strong>100%</strong></td><td><strong>${Object.values(minsPonderados).reduce((a,b)=>a+b,0).toLocaleString()} min</strong></td></tr>`;
-            html+='</tbody>';
-            return html;
-        }
-        
-        function generarRepitenciaCamaras(){
-            let camCounts={}, casosConCams=0;
-            filteredEvents.forEach(ev=>{
-                if(ev.camaras_aportadas){
-                    let cams=procesarCamarasAportadas(ev.camaras_aportadas);
-                    if(cams.length){ casosConCams++; cams.forEach(c=>camCounts[c]=(camCounts[c]||0)+1); }
-                }
-            });
-            let sorted=Object.entries(camCounts).sort((a,b)=>b[1]-a[1]);
-            if(!sorted.length) return '<div class="loading">Sin datos de cámaras</div>';
-            let html=`<div style="padding:8px;background:#333;margin-bottom:10px;"><strong>📊 Casos con solicitud de cámaras: ${casosConCams} | Total de solicitudes: ${Object.values(camCounts).reduce((a,b)=>a+b,0)}</strong></div>
-            <table class="analysis-table repitencia-table"><thead><th>Cámara</th><th>Veces Solicitada</th><th>% de casos</th><th>Nivel de demanda</th></thead><tbody>`;
-            sorted.forEach(([cam,count])=>{
-                let pct= casosConCams?((count/casosConCams)*100).toFixed(1):0;
-                let badge = count>10?'🔴 Alta':(count>5?'🟡 Media':'🟢 Baja');
-                let cls = count>10?'repitencia-alta':(count>5?'repitencia-media':'repitencia-baja');
-                html+=`<tr><td><strong>Cámara ${cam}</strong></td><td><strong>${count}</strong></td><td><strong>${pct}%</strong></td><td><span class="repitencia-badge ${cls}"><strong>${badge}</strong></span></td></tr>`;
-            });
-            html+='</tbody>';
-            return html;
-        }
-        
-        function exportarMinutosPorCamara() {
-            let minsPorCamara = {};
-            camerasData.forEach(c=>{ if(c.nombre_camara) minsPorCamara[c.nombre_camara]=0; });
-            filteredEvents.forEach(ev => {
-                let minsReales = calcularMinutosReales(ev);
-                if(minsReales > 0 && ev.camaras_aportadas) {
-                    procesarCamarasAportadas(ev.camaras_aportadas).forEach(cam => {
-                        if(minsPorCamara[cam] !== undefined) minsPorCamara[cam] += minsReales;
-                    });
-                }
-            });
-            let data = [['Cámara', 'Minutos Totales', 'Horas Equivalentes', 'Dirección']];
-            let camarasConDatos = Object.entries(minsPorCamara).filter(([_,v])=>v>0).sort((a,b)=>b[1]-a[1]);
-            camarasConDatos.forEach(([cam, minutos]) => {
-                let camera = camerasData.find(c => c.nombre_camara === cam);
-                let direccion = camera?.direccion || `Cámara ${cam}`;
-                data.push([cam, minutos.toLocaleString(), (minutos/60).toFixed(2), direccion]);
-            });
-            let totalGeneral = camarasConDatos.reduce((acc, [_,min]) => acc + min, 0);
-            data.push(['TOTAL GENERAL', totalGeneral.toLocaleString(), (totalGeneral/60).toFixed(2), '-']);
-            let ws = XLSX.utils.aoa_to_sheet(data);
-            let wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, 'Minutos x Cámara');
-            XLSX.writeFile(wb, `minutos_camaras_${Date.now()}.xlsx`);
-            showNotification("✅ Excel generado");
-        }
-        
-        function generarGraficoBarras(){
-            let minsPorCamara = {};
-            camerasData.forEach(c=>{ if(c.nombre_camara) minsPorCamara[c.nombre_camara]=0; });
-            filteredEvents.forEach(ev => {
-                let minsReales = calcularMinutosReales(ev);
-                if(minsReales > 0 && ev.camaras_aportadas) {
-                    procesarCamarasAportadas(ev.camaras_aportadas).forEach(cam => {
-                        if(minsPorCamara[cam] !== undefined) minsPorCamara[cam] += minsReales;
-                    });
-                }
-            });
-            let top = Object.entries(minsPorCamara).filter(([_,v])=>v>0).sort((a,b)=>b[1]-a[1]).slice(0,12);
-            if(!top.length){ showNotification("Sin datos para gráfico"); return; }
-            document.getElementById('chart-modal').classList.add('show');
-            let ctx = document.getElementById('minutos-chart').getContext('2d');
-            if(minutosChart) minutosChart.destroy();
-            minutosChart = new Chart(ctx, {
-                type: 'bar',
-                data: { labels: top.map(([c])=>`Cam ${c}`), datasets: [{ label: 'Minutos por cámara', data: top.map(([_,v])=>v), backgroundColor: '#4a8cff' }] },
-                options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'top' }, tooltip: { callbacks: { label: (ctx) => `${ctx.raw.toLocaleString()} minutos (${(ctx.raw/60).toFixed(1)} hs)` } } } }
-            });
-        }
-        
-        function showNotification(msg){ let n=document.getElementById('notification'); n.textContent=msg; n.classList.add('show'); setTimeout(()=>n.classList.remove('show'),2500); }
-        
-        function initializeChips(){
-            let caratulaDD = document.getElementById('caratula-dropdown'), fiscaliaDD = document.getElementById('fiscalia-dropdown');
-            let caratulasOrdenadas = Array.from(caratulaOptions).sort();
-            let fiscaliasOrdenadas = Array.from(fiscaliaOptions).sort();
-            
-            caratulasOrdenadas.forEach(c=>{ let opt=document.createElement('div'); opt.className='chips-option'; opt.textContent=c; opt.onclick=()=>{ if(!selectedCaratulas.includes(c)){ selectedCaratulas.push(c); updateChipsDisplay('caratula'); } caratulaDD.classList.remove('show'); }; caratulaDD.appendChild(opt); });
-            
-            // Orden de fiscalías para el selector: prioridad específica
-            const ordenPrioridadSelector = ["U.F.I N°9", "U.F.I N°10", "ESPECIALIZADA EN NARCOTRÁFICO"];
-            fiscaliasOrdenadas.sort((a,b) => {
-                const indexA = ordenPrioridadSelector.indexOf(a);
-                const indexB = ordenPrioridadSelector.indexOf(b);
-                if (indexA !== -1 && indexB !== -1) return indexA - indexB;
-                if (indexA !== -1) return -1;
-                if (indexB !== -1) return 1;
-                return a.localeCompare(b);
-            });
-            
-            fiscaliasOrdenadas.forEach(f=>{ let opt=document.createElement('div'); opt.className='chips-option'; opt.textContent=f; opt.onclick=()=>{ if(!selectedFiscalias.includes(f)){ selectedFiscalias.push(f); updateChipsDisplay('fiscalia'); } fiscaliaDD.classList.remove('show'); }; fiscaliaDD.appendChild(opt); });
-            
-            document.getElementById('caratula-select').onclick=e=>{ e.stopPropagation(); caratulaDD.classList.toggle('show'); fiscaliaDD.classList.remove('show'); };
-            document.getElementById('fiscalia-select').onclick=e=>{ e.stopPropagation(); fiscaliaDD.classList.toggle('show'); caratulaDD.classList.remove('show'); };
-            document.addEventListener('click',()=>{ caratulaDD.classList.remove('show'); fiscaliaDD.classList.remove('show'); });
-        }
-        
-        function updateChipsDisplay(type){
-            let arr = type==='caratula'?selectedCaratulas:selectedFiscalias;
-            let container = document.getElementById(`${type}-chips`);
-            container.innerHTML='';
-            arr.forEach(v=>{ let chip=document.createElement('div'); chip.className='chip'; chip.innerHTML=`${v}<button class="chip-remove" data-value="${v}">×</button>`; container.appendChild(chip); });
-            document.querySelectorAll(`#${type}-chips .chip-remove`).forEach(btn=>{ btn.onclick=e=>{ let val=btn.getAttribute('data-value'); let idx=arr.indexOf(val); if(idx>-1) arr.splice(idx,1); updateChipsDisplay(type); }; });
-            let selectDiv = document.getElementById(`${type}-select`);
-            selectDiv.textContent = arr.length ? `${arr.length} seleccionada(s)` : `Seleccionar ${type==='caratula'?'carátulas':'fiscalías'}...`;
-        }
-        
-        function loadData(){
-            Promise.all([fetch(CAMERAS_API_URL).then(r=>r.json()), fetch(EVENTS_API_URL).then(r=>r.json())]).then(([cams, evs])=>{
-                camerasData=cams; eventsData=evs;
-                eventsData.forEach(ev=>{ if(ev['caratula-agrupada']) caratulaOptions.add(ev['caratula-agrupada']); if(ev.fiscalia) fiscaliaOptions.add(ev.fiscalia); if(ev['mes-agrupacion']) mesAgrupacionOptions.add(ev['mes-agrupacion']); });
-                
-                let selectMes = document.getElementById('mes-agrupacion');
-                let mesesOrdenados = Array.from(mesAgrupacionOptions).sort();
-                mesesOrdenados.forEach(m=>{ let opt=document.createElement('option'); opt.value=m; opt.textContent=m; selectMes.appendChild(opt); });
-                
-                // Seleccionar automáticamente el último mes
-                if (mesesOrdenados.length > 0) {
-                    let ultimoMes = mesesOrdenados[mesesOrdenados.length - 1];
-                    selectMes.value = ultimoMes;
-                }
-                
-                initializeChips();
-                applyFilters();
-            }).catch(console.error);
-        }
-        
-        map = L.map('map').setView([-35.57, -58.01], 14);
-        baseLayers.openstreetmap = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution:'© OpenStreetMap'}).addTo(map);
-        baseLayers.carto = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {attribution:'© CARTO'});
-        function changeBaseLayer(layer){ map.removeLayer(baseLayers.openstreetmap); map.removeLayer(baseLayers.carto); baseLayers[layer].addTo(map); currentBaseLayer=layer; updateMapButtons(layer); }
-        function updateMapButtons(active){ document.getElementById('btn-lienzo1').classList.toggle('active',active==='openstreetmap'); document.getElementById('btn-lienzo2').classList.toggle('active',active==='carto'); }
-        document.getElementById('btn-lienzo1').onclick=()=>changeBaseLayer('openstreetmap');
-        document.getElementById('btn-lienzo2').onclick=()=>changeBaseLayer('carto');
-        document.getElementById('point-size').addEventListener('input',e=>{pointSize=e.target.value; document.getElementById('point-size-value').innerText=pointSize+'px'; updateMapPoints();});
-        document.getElementById('point-opacity').addEventListener('input',e=>{pointOpacity=e.target.value; document.getElementById('point-opacity-value').innerText=Math.round(pointOpacity*100)+'%'; updateMapPoints();});
-        document.getElementById('filter-form').addEventListener('submit',e=>{e.preventDefault(); applyFilters();});
-        document.getElementById('reset-btn').addEventListener('click',()=>{ 
-            selectedCaratulas=[]; selectedFiscalias=[]; 
-            updateChipsDisplay('caratula'); updateChipsDisplay('fiscalia'); 
-            document.getElementById('start-date').value='';
-            document.getElementById('end-date').value='';
-            applyFilters(); 
+        tr.addEventListener("click", () => {
+            trDetalle.classList.toggle("visible");
+            const icon = tr.querySelector("i");
+            icon.classList.toggle("fa-chevron-down");
+            icon.classList.toggle("fa-chevron-up");
         });
-        document.getElementById('export-minutos-camaras-btn').addEventListener('click',exportarMinutosPorCamara);
-        document.getElementById('export-grafico-barras-btn').addEventListener('click',generarGraficoBarras);
-        document.getElementById('export-doc-btn').addEventListener('click',exportarDocumentoEditable);
-        document.getElementById('download-chart-btn').addEventListener('click',()=>{ let canvas=document.getElementById('minutos-chart'); if(canvas){ let link=document.createElement('a'); link.download='grafico.png'; link.href=canvas.toDataURL(); link.click(); } });
-        document.getElementById('chart-close').onclick=()=>document.getElementById('chart-modal').classList.remove('show');
-        document.getElementById('tab-fiscalia-caratula').onclick=()=>{ currentTab='fiscalia-caratula'; document.querySelectorAll('.tab-btn').forEach(btn=>btn.classList.remove('active')); document.getElementById('tab-fiscalia-caratula').classList.add('active'); updateAllAnalysis(); };
-        document.getElementById('tab-caratula-cantidad').onclick=()=>{ currentTab='caratula-cantidad'; document.querySelectorAll('.tab-btn').forEach(btn=>btn.classList.remove('active')); document.getElementById('tab-caratula-cantidad').classList.add('active'); updateAllAnalysis(); };
-        document.getElementById('tab-repitencia-camaras').onclick=()=>{ currentTab='repitencia-camaras'; document.querySelectorAll('.tab-btn').forEach(btn=>btn.classList.remove('active')); document.getElementById('tab-repitencia-camaras').classList.add('active'); updateAllAnalysis(); };
-        loadData();
-    </script>
+        
+        tbody.appendChild(tr);
+        tbody.appendChild(trDetalle);
+    });
+}
+
+function formatDate(dateString) {
+    if(!dateString) return "";
+    const date = new Date(dateString);
+    if(isNaN(date.getTime())) {
+        const [year, month, day] = dateString.split('-');
+        if(year && month && day) {
+            return `${day}/${month}/${year}`;
+        }
+        return dateString; 
+    }
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+}
+
+function mostrarCamposEstado() {
+    const estado = document.getElementById("estado_material").value;
+    
+    document.getElementById("motivoRechazoGroup").classList.add("hidden");
+    document.getElementById("tipoNoDisponibleGroup").classList.add("hidden");
+
+    if(estado === "Rechazado por Irregularidades") {
+        document.getElementById("motivoRechazoGroup").classList.remove("hidden");
+    } else if(estado === "No se dispone de material") {
+        document.getElementById("tipoNoDisponibleGroup").classList.remove("hidden");
+    }
+}
+
+function updatePendingCases() {
+    pendingCases = existingData.filter(item =>
+        item.numero_oficio && item.numero_oficio.includes("#")
+    ).length;
+    
+    const alertPanel = document.getElementById("reviewAlert");
+    const countBadge = document.getElementById("pendingCasesCount");
+    
+    countBadge.textContent = pendingCases;
+    
+    if(pendingCases > 0) {
+        alertPanel.classList.remove("hidden");
+    } else {
+        alertPanel.classList.add("hidden");
+    }
+}
+
+function setupFieldMonitoring() {
+    const numeroOficioInput = document.getElementById("numero_oficio");
+    const numeroOficioAlert = document.getElementById("numero_oficio_alert");
+    
+    numeroOficioInput.addEventListener("input", function() {
+        if(this.value.includes("#")) {
+            this.classList.add("has-warning");
+            numeroOficioAlert.style.display = "block";
+        } else {
+            this.classList.remove("has-warning");
+            numeroOficioAlert.style.display = "none";
+        }
+    });
+
+    const numeroIdInput = document.getElementById("numero_identificacion");
+    const numeroIdAlert = document.getElementById("numero_identificacion_alert");
+    
+    numeroIdInput.addEventListener("input", function() {
+        if(this.value.length >= 1) { 
+            checkForDuplicateId();
+        } else {
+            numeroIdInput.classList.remove("has-error");
+            numeroIdAlert.style.display = "none";
+        }
+    });
+}
+
+function checkForDuplicateId() {
+    const numeroIdInput = document.getElementById("numero_identificacion");
+    const numeroIdAlert = document.getElementById("numero_identificacion_alert");
+    const idValue = numeroIdInput.value;
+    
+    if(!idValue) return false;
+    
+    const isDuplicate = existingData.some(item => item.numero_identificacion === idValue);
+    
+    if(isDuplicate) {
+        numeroIdInput.classList.add("has-error");
+        numeroIdAlert.style.display = "block";
+        return true;
+    } else {
+        numeroIdInput.classList.remove("has-error");
+        numeroIdAlert.style.display = "none";
+        return false;
+    }
+}
+
+function generarID() {
+    const fecha = new Date();
+    const fechaStr = fecha.toISOString().slice(0,10).replace(/-/g,"");
+    const randomHex = Math.floor(Math.random() * 0xFFFF).toString(16).toUpperCase().padStart(4,"0");
+    return `OF-${fechaStr}-${randomHex}`;
+}
+
+function getFechaHoraActual() {
+    const ahora = new Date();
+    const dia = ahora.getDate().toString().padStart(2,"0");
+    const mes = (ahora.getMonth()+1).toString().padStart(2,"0");
+    const año = ahora.getFullYear();
+    const horas = ahora.getHours().toString().padStart(2,"0");
+    const minutos = ahora.getMinutes().toString().padStart(2,"0");
+    return `${dia}/${mes}/${año} ${horas}:${minutos}`;
+}
+
+document.getElementById("agregar-calle").addEventListener("click", function() {
+    const container = document.getElementById("calles-container");
+    const nuevoGrupo = document.createElement("div");
+    nuevoGrupo.className = "calle-periodo-group";
+    
+    nuevoGrupo.innerHTML = `
+        <div class=form-group>
+            <label>Calle(s)</label>
+            <textarea class=calle-text rows=2 required placeholder="Ej: Av. Corrientes 1200"></textarea>
+        </div>
+        <div class=date-time-range>
+            <div>
+                <label>Fecha Inicio</label>
+                <input type=date class=fecha-inicio required>
+            </div>
+            <div>
+                <label>Hora Inicio</label>
+                <input type=time class=hora-inicio required>
+            </div>
+            <div>
+                <label>Fecha Fin</label>
+                <input type=date class=fecha-fin required>
+            </div>
+            <div>
+                <label>Hora Fin</label>
+                <input type=time class=hora-fin required>
+            </div>
+        </div>
+        <button type=button class=eliminar-calle>
+            <i class="fas fa-trash"></i> Eliminar
+        </button>
+    `;
+    
+    container.appendChild(nuevoGrupo);
+    
+    nuevoGrupo.querySelector(".eliminar-calle").addEventListener("click", function() {
+        if(confirm("¿Eliminar grupo?")) {
+            nuevoGrupo.remove();
+        }
+    });
+});
+
+document.getElementById("oficioForm").addEventListener("submit", async function(e) {
+    e.preventDefault();
+    
+    if(checkForDuplicateId()) {
+        alert("Error: N° de ID duplicado");
+        document.getElementById("numero_identificacion").focus();
+        return;
+    }
+    
+    const fiscaliaSelect = document.getElementById("fiscalia");
+    let fiscaliaValue = fiscaliaSelect.value;
+    
+    if(fiscaliaValue === "OTRO") {
+        const otraFiscalia = document.getElementById("otra_fiscalia").value.trim();
+        if(!otraFiscalia) {
+            alert("Debe especificar la fiscalía cuando selecciona 'OTRO'");
+            document.getElementById("otra_fiscalia").focus();
+            return;
+        }
+        fiscaliaValue = `OTRO: ${otraFiscalia}`; 
+    }
+    
+    const estadoMaterial = document.getElementById("estado_material").value;
+    let detallesEstado = "";
+    
+    if(estadoMaterial === "Rechazado por Irregularidades") {
+        detallesEstado = `Rechazado: ${document.getElementById("motivo_rechazo").value}`;
+    } else if(estadoMaterial === "No se dispone de material") {
+        detallesEstado = `No disponible: ${document.getElementById("tipo_no_disponible").value}`;
+    } else {
+        detallesEstado = estadoMaterial;
+    }
+    
+    // Obtener los nuevos valores
+    const mesAgrupacion = document.getElementById("mes_agrupacion").value;
+    const caratulaAgrupada = document.getElementById("caratula_agrupada").value;
+    
+    const grupos = document.querySelectorAll(".calle-periodo-group");
+    
+    try {
+        for(const grupo of grupos) {
+            const formData = {
+                id: generarID(),
+                numero_oficio: document.getElementById("numero_oficio").value,
+                numero_identificacion: document.getElementById("numero_identificacion").value,
+                "mes-agrupacion": mesAgrupacion,     // Nuevo campo
+                fiscalia: fiscaliaValue,
+                caratula: document.getElementById("caratula").value,
+                "caratula-agrupada": caratulaAgrupada, // Nuevo campo
+                calles: grupo.querySelector(".calle-text").value,
+                fecha_inicio: grupo.querySelector(".fecha-inicio").value,
+                hora_inicio: grupo.querySelector(".hora-inicio").value,
+                fecha_fin: grupo.querySelector(".fecha-fin").value,
+                hora_fin: grupo.querySelector(".hora-fin").value,
+                camaras_aportadas: document.getElementById("camaras_aportadas").value,
+                observaciones: document.getElementById("observaciones").value,
+                "estado-material": detallesEstado,
+                fecha_carga: getFechaHoraActual(),
+                timestamp: new Date().toISOString()
+            };
+
+            const response = await fetch(SHEETBEST_URL, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(formData)
+            });
+
+            if(!response.ok) {
+                throw new Error("Error al guardar");
+            }
+        }
+
+        const refreshResponse = await fetch(SHEETBEST_URL);
+        existingData = await refreshResponse.json();
+        updatePendingCases();
+        
+        document.getElementById("successModal").style.display = "flex";
+        document.getElementById("errorMessage").style.display = "none";
+        document.getElementById("oficioForm").reset();
+        document.getElementById("otraFiscaliaGroup").classList.add("hidden");
+        document.getElementById("motivoRechazoGroup").classList.add("hidden");
+        document.getElementById("tipoNoDisponibleGroup").classList.add("hidden");
+        
+    } catch(error) {
+        document.getElementById("errorMessage").style.display = "block";
+        document.getElementById("errorMessage").innerHTML = `
+            <i class="fas fa-exclamation-circle"></i> Error: ${error.message || "Revise conexión"}
+        `;
+        console.error("Error:", error);
+    }
+});
+</script>
 </body>
 </html>
